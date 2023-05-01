@@ -44,10 +44,11 @@ def main():
     demmand = [SystemRandom().randint(100, 1000) for _ in range(clients)]
 
     sum_supply, sum_demmand = sum(supply), sum(demmand)
-    if sum(supply) < sum(demmand):
+    if sum_supply < sum_demmand:
         for i in range(orig):
             supply[i] += (sum_demmand - sum_supply) // orig
         supply[0] += (sum_demmand - sum_supply) % orig
+    assert(sum(supply) >= sum_demmand)
     aux = np.array(supply)
     pd.DataFrame(aux).to_csv("./dados/supply.csv", index=None)
     

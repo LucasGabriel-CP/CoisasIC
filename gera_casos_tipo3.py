@@ -2,7 +2,7 @@
 Program to create random cases
 Tipo 3:
     demanda <= supply
-    fim no porto, sem limite transbordoTipo 2: 
+    fim no porto, sem limite transbordo: 
 """
 
 from random import SystemRandom
@@ -49,7 +49,7 @@ def main():
     aux = np.array(supply)
     pd.DataFrame(aux).to_csv("./dados/supply.csv", index=None)
     
-    pd.DataFrame(demmand).to_csv("./dados/demmand.csv", index=None)
+    pd.DataFrame(demmand).to_csv("./dados/demand.csv", index=None)
 
 
 if __name__ == "__main__":
