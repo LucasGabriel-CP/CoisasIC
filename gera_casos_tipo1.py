@@ -38,33 +38,34 @@ def main():
     savetocsv('transbordo_porto', cost_transbordo_porto)
     savetocsv('origem_porto', cost_orig_porto)
 
-    supply = [SystemRandom().randint(100, 1000) for _ in range(orig)]
+    demand = [SystemRandom().randint(100, 1000) for _ in range(clients)]
+    sum_demand = sum(demand)
+    supply = [SystemRandom().randint(100, sum_demand) for _ in range(orig)]
     cap_trans = [SystemRandom().randint(100, 1000) for _ in range(trans)]
     cap_porto = [SystemRandom().randint(100, 1000) for _ in range(port)]
-    demmand = [SystemRandom().randint(100, 1000) for _ in range(clients)]
 
-    sum_supply, sum_demmand = sum(supply), sum(demmand)
-    if sum_supply < sum_demmand:
+    sum_supply = sum(supply)
+    if sum_supply < sum_demand:
         for i in range(orig):
-            supply[i] += (sum_demmand - sum_supply) // orig
-        supply[0] += (sum_demmand - sum_supply) % orig
-    assert(sum(supply) >= sum_demmand)
+            supply[i] += (sum_demand - sum_supply) // orig
+        supply[0] += (sum_demand - sum_supply) % orig
+    assert(sum(supply) >= sum_demand)
     aux = np.array(supply)
     pd.DataFrame(aux).to_csv("./dados/supply.csv", index=None)
     
     t = SystemRandom().randint(1, trans)
     for _ in range(t):
-        cap_trans[SystemRandom().randint(1, trans) - 1] = sum_demmand
+        cap_trans[SystemRandom().randint(1, trans) - 1] = sum_demand
     aux = np.array(cap_trans)
     pd.DataFrame(aux).to_csv("./dados/cap_transbordo.csv", index=None)
 
     t = SystemRandom().randint(1, port)
     for _ in range(t):
-        cap_porto[SystemRandom().randint(1, port) - 1] = sum_demmand
+        cap_porto[SystemRandom().randint(1, port) - 1] = sum_demand
     aux = np.array(cap_porto)
     pd.DataFrame(aux).to_csv("./dados/cap_porto.csv", index=None)
     
-    pd.DataFrame(demmand).to_csv("./dados/demand.csv", index=None)
+    pd.DataFrame(demand).to_csv("./dados/demand.csv", index=None)
 
 
 if __name__ == "__main__":

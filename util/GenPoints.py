@@ -159,6 +159,9 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
     for _ in range(4):
         x = SystemRandom().randint(lim_x_left, lim_x_right)
         y = SystemRandom().randint(lim_y_down, lim_y_up)
+        while Point(x, y) in points:
+            x = SystemRandom().randint(lim_x_left, lim_x_right)
+            y = SystemRandom().randint(lim_y_down, lim_y_up)
         points.append(Point(x, y))
     
     while get_pick(points=points) < n:
@@ -166,6 +169,9 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
         for _ in range(4):
             x = SystemRandom().randint(lim_x_left, lim_x_right)
             y = SystemRandom().randint(lim_y_down, lim_y_up)
+            while Point(x, y) in points:
+                x = SystemRandom().randint(lim_x_left, lim_x_right)
+                y = SystemRandom().randint(lim_y_down, lim_y_up)
             points.append(Point(x, y))
     
     left_most, right_most = lim_x_right + 1, lim_x_left - 1
@@ -181,7 +187,7 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
         x = SystemRandom().randint(left_most, right_most)
         y = SystemRandom().randint(lowest, highest)
         p = Point(x, y)
-        while not checkInside(points, 4, p):
+        while not checkInside(points, 4, p) or p in ans:
             x = SystemRandom().randint(left_most, right_most)
             y = SystemRandom().randint(lowest, highest)
             p = Point(x, y)
@@ -190,13 +196,14 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
     return ans
 
 def distance(p1: Point, p2: Point):
-    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2))
+    return sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
 def get_cost(points_orig, n, points_dest, m, tku):
     matrix = []
     for i in range(n):
         aux = []
         for j in range(m):
+            breakpoint()
             aux.append(distance(points_orig[i], points_dest[j]) * tku)
         matrix.append(aux)
 
