@@ -4,7 +4,7 @@ def proper_round(num, dec=0) -> float:
     return round(num, dec)
 
 class Point:
-    def __init__(self, x, y, cap) -> None:
+    def __init__(self, x=-1, y=-1, cap=0) -> None:
         self.x = x
         self.y = y
         self.cap = cap
@@ -18,7 +18,7 @@ class Point:
         return self.cap < other.cap
     
     def __sub__(self, other):
-        return Point(self.x, self.y, other)
+        return Point(self.x, self.y, self.cap - other)
 
     def __isub__(self, other):
         return self.__sub__(other=other)
