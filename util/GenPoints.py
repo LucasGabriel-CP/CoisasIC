@@ -203,7 +203,6 @@ def get_cost(points_orig, n, points_dest, m, tku):
     for i in range(n):
         aux = []
         for j in range(m):
-            breakpoint()
             aux.append(distance(points_orig[i], points_dest[j]) * tku)
         matrix.append(aux)
 

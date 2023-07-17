@@ -42,10 +42,11 @@ def main():
     supply = [SystemRandom().randint(100, 1000) for _ in range(orig)]
     cap_trans = [SystemRandom().randint(100, 1000) for _ in range(trans)]
     cap_porto = [SystemRandom().randint(100, 1000) for _ in range(port)]
-    demmand = [SystemRandom().randint(100, 1000) for _ in range(clients)]
+    sum_supply = sum(supply)
+    demmand = [SystemRandom().randint(100, sum_supply) for _ in range(clients)]
 
-    sum_supply, sum_demmand = sum(supply), sum(demmand)
-    if sum(supply) > sum(demmand):
+    sum_demmand = sum(demmand)
+    if sum_supply > sum_demmand:
         for i in range(clients):
             demmand[i] += (sum_supply - sum_demmand) // clients
         demmand[0] += (sum_supply - sum_demmand) % clients
