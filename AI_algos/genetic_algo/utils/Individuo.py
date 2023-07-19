@@ -7,7 +7,7 @@ from functools import partial
 from typing import List, Tuple, Callable, DefaultDict, Dict
 from collections import defaultdict
 import time
-from utils.Point import Point
+from .Point import Point
 
 class Cromossomo:
     def __init__(self, _id: int, _point: Point) -> None:
@@ -32,7 +32,6 @@ class Cromossomo:
         for _, i in self.adjlist[self.gene_id].items():
             sum += i[1]
         return sum
-
 
     def __str__(self) -> str:
         return "id: " + str(self.gene_id) + '\nconection: ' + self.type_conection + '\nCost: ' + str(self.get_cost()) + '\n' + str(self.gene_point)
@@ -98,9 +97,9 @@ class Individuo:
             while new_cromo.gene_point.cap != 0:
                 op = randint(self.k[0], self.m[-1])
                 if op in self.transbordos:
-                    new_cromo = self.give_direct(cromo=new_cromo, cost_matrix=cost_matrix)
-                else:
                     new_cromo = self.give_tranship(cromo=new_cromo, cost_matrix=cost_matrix)
+                else:
+                    new_cromo = self.give_direct(cromo=new_cromo, cost_matrix=cost_matrix)
             new_dna.append(new_cromo)
         self.cromossomos = new_dna
 
@@ -137,7 +136,7 @@ class Individuo:
 
         return cromo
 
-    def get_nearest_porto(self, point, oferta, cost_matrix):
+    def get_nearest_porto(self, point, oferta, cost_matrix) -> Tuple[float, int, float]:
         closest = float('inf')
         id = None
         for key, value in self.portos.items():
@@ -148,7 +147,7 @@ class Individuo:
         assert id in self.portos, f'id: {id}'
         return [closest, id, min(oferta, self.portos[id].cap)]
     
-    def get_nearest_transbordo(self, point, oferta, cost_matrix):
+    def get_nearest_transbordo(self, point, oferta, cost_matrix) -> Tuple[float, int, float, int, int]:
         cost_trans, cost_port = float('inf'), float('inf')
         id_trans, id_port = None, None
         qnt_to_transport = oferta

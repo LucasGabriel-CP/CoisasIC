@@ -9,7 +9,7 @@ from functools import partial
 from typing import List, Tuple, Callable, DefaultDict, Dict
 from collections import defaultdict
 import time
-from Individuo import Individuo, Point
+from utils import Point
 from GA import Evolution
 
 def closest_distances(cost_matrix, N, M, K):
@@ -25,6 +25,26 @@ def closest_distances(cost_matrix, N, M, K):
                     dists[i][j] = dists[i][k] + dists[k][j]
                     paths[i] = [k, j]
     return paths
+
+
+def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: Dict[int, Point]):
+    ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
+    [best, t] = ga.run_evo(
+                        croosover_point=.25, mutation_point=.3,
+                        generation_limit=10000, tam_population=128,
+                        elitism_size=.05, fitness_limit=2388275.0263051689,
+                        show_progress=True
+                    )
+    score = best.get_fitness()
+    print(f'fitness: {best.get_fitness()} with time: {t}')
+    graph = defaultdict(lambda: np.zeros(2))
+    send = defaultdict(float)
+    for i in best.cromossomos:
+        for u, val in i.adjlist.items():
+            for v, val2 in val.items():
+                graph[u, v] += val2
+                send[u] += val2
+    return [graph, score]
 
 def main() -> None:
     seed(int(time.time()))
@@ -89,7 +109,12 @@ def main() -> None:
     # print(cap_port)
 
     ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
-    [best, t] = ga.run_evo(show_progress=True, croosover_point=.35, mutation_point=.3, generation_limit=10000, tam_population=128, fitness_limit=225619.17757861919)
+    [best, t] = ga.run_evo(
+                        croosover_point=.35, mutation_point=.3,
+                        generation_limit=10000, tam_population=128,
+                        elitism=0.05, fitness_limit=2388275.0263051689,
+                        show_progress=True
+                    )
     print(f'fitness: {best.get_fitness()} with time: {t}')
     graph = defaultdict(lambda: np.zeros(2))
     send = defaultdict(float)

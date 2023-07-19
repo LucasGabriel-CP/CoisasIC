@@ -9,7 +9,7 @@ class Point:
         self.y = y
         self.cap = cap
 
-    def get_distance(self, other) -> int:
+    def get_distance(self, other) -> float:
         d = sqrt((other.x -  self.x) * (other.x -  self.x) +
                     (other.y -  self.y) * (other.y -  self.y))
         return int(proper_round(d))
