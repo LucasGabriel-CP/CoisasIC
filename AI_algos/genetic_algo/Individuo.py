@@ -43,26 +43,28 @@ class Individuo:
         self.portos = deepcopy(portos)
         self.clientes = deepcopy(clientes)
 
-        self.n = len(origens)
-        self.m = len(portos)
-        self.k = len(transbordos)
-        self.o = len(clientes)
+        self.n =list(origens.keys())
+        self.m = list(portos.keys())
+        self.k = list(transbordos.keys())
 
         self.cromossomos = []
-        for i in range(self.n):
+        for i in range(len(self.n)):
             self.cromossomos.append(Cromossomo(i, origens[i]))
         shuffle(self.cromossomos)
 
     def give_random_stuff(self, cost_matrix) -> None:
+        if random() < 0.05:
+            self.give_not_so_random_stuff(cost_matrix=cost_matrix)
+            return
         pt, tb = 0, 0
         new_dna = []
         key_port, key_transbordos = list(self.portos.keys()), list(self.transbordos.keys())
         for cromo in self.cromossomos:
             new_cromo = cromo
             while new_cromo.gene_point.cap != 0:
-                if random() < 0.5 and tb < self.k:
-                    # send to port
-                    id_trans = choice(key_transbordos)
+                op = randint(self.k[0], self.m[-1])
+                if op in self.transbordos:
+                    id_trans = op
                     while self.transbordos[id_trans].cap == 0:
                         id_trans = choice(key_transbordos)
                     id_port = choice(key_port)
@@ -78,8 +80,7 @@ class Individuo:
                     self.transbordos[id_trans] -= qnt_to_transport
                     tb += 1
                 else:
-                    #send to trans them to port
-                    id_port = choice(key_port)
+                    id_port = op
                     while self.portos[id_port].cap == 0:
                         id_port = choice(key_port)
                     cost = cost_matrix[cromo.gene_id][id_port]
@@ -95,11 +96,10 @@ class Individuo:
         for cromo in self.cromossomos:
             new_cromo = cromo
             while new_cromo.gene_point.cap != 0:
-                if random() < 0.5:
-                    # send to port
+                op = randint(self.k[0], self.m[-1])
+                if op in self.transbordos:
                     new_cromo = self.give_direct(cromo=new_cromo, cost_matrix=cost_matrix)
                 else:
-                    #send to trans them to port
                     new_cromo = self.give_tranship(cromo=new_cromo, cost_matrix=cost_matrix)
             new_dna.append(new_cromo)
         self.cromossomos = new_dna
@@ -166,7 +166,8 @@ class Individuo:
 
         assert id_trans in self.transbordos, 'id_trans not found'
         assert id_port in self.portos, 'id_port not found'
-                
+        assert qnt_to_transport <= self.portos[id_port].cap and qnt_to_transport <= self.transbordos[id_trans].cap
+
         return [cost_trans, id_trans, cost_port, id_port, qnt_to_transport]
 
     def get_fitness(self) -> float:
@@ -175,17 +176,17 @@ class Individuo:
             sum += cromo.get_cost()
         return sum
     
-    def update_info(self) -> None:
+    def update_info(self) -> bool:
         for cromo in self.cromossomos:
             for key_1, value_1 in cromo.adjlist.items():
-                qnt = 0
                 for key_2, value_2 in value_1.items():
-                    qnt += value_2[1]
                     if key_2 in self.portos:
                         self.portos[key_2] -= value_2[1]
-                if key_1 in self.transbordos:
-                    self.transbordos[key_1] -= qnt
-
+                    elif key_2 in self.transbordos:
+                        self.transbordos[key_2] -= value_2[1]
+                        if self.transbordos[key_2].cap >= .0:
+                            return False
+        return True
     def __str__(self) -> str:
         ans = '-'*43
         for cromo in self.cromossomos:

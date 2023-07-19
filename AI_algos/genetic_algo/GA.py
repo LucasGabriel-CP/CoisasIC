@@ -37,7 +37,7 @@ class Evolution:
         parents = choices(
             population=population,
             weights=[1 + worst - ind.get_fitness() for ind in population],
-            k = 2
+            k = 7
         )
         parents = sorted(
             parents,
@@ -66,12 +66,19 @@ class Evolution:
             if not has[cromo.gene_id]:
                 Children.cromossomos.append(cromo)
 
-        Children.update_info()
+        if not Children.update_info():
+            aux = Children.cromossomos
+            Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
+            for i in range(len(Children.cromossomos)):
+                Children.cromossomos[i].gene_id = aux[i].gene_id
+                Children.cromossomos[i].gene_point = self.origens[aux[i].gene_id]
+            Children.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
+
         return Children
 
     def Mutation(self, individuo: Individuo, best: float) -> Individuo:
         individuo = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
-        individuo.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
+        individuo.give_random_stuff(cost_matrix=self.cost_matrix)
         return individuo
 
     def run_evo(
@@ -85,6 +92,8 @@ class Evolution:
     ) -> Individuo:
         population = self.GenPop(tam=tam_population)
         st = time.time()
+        nd = None
+        best = population[0].get_fitness()
         for i in range(generation_limit):
             population = sorted(
                 population,
@@ -96,7 +105,10 @@ class Evolution:
                     break
                 cnt += 1
             if show_progress:
-                print(f"Generation {i}, Fitness {cnt}: {population[0].get_fitness()}, worst: {population[-1].get_fitness()}, len: {len(population)}")
+                print(f"Generation {i}, Fitness {cnt}: {population[0].get_fitness()}")
+            if best - population[0].get_fitness() < 1e-6:
+                best = population[0].get_fitness()
+                nd = time.time()
             if abs(population[0].get_fitness() - fitness_limit) < 1e-6:
                 break
             next_gen = deepcopy(population[:2])
@@ -114,6 +126,7 @@ class Evolution:
                         parents[1] = self.Mutation(parents[1], population[0].get_fitness())
                     next_gen += deepcopy([parents[0], parents[1]])
             population = deepcopy(next_gen)
-        nd = time.time()
+        if nd is None:
+            nd = time.time()
         return [population[0], nd - st]
             

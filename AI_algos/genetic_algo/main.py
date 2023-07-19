@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import heapq
-from random import randint, shuffle, sample, choices, random
+from random import randint, shuffle, sample, choices, random, seed
 from copy import deepcopy
 from math import sqrt, cos, acos, ceil
 from functools import partial
@@ -27,6 +27,7 @@ def closest_distances(cost_matrix, N, M, K):
     return paths
 
 def main() -> None:
+    seed(int(time.time()))
     #Read data
     #Read cost matrix
     df_ori_dest = pd.read_csv('D:/Bibliotecas/Documents/IC/Progs/dados/origem_porto.csv')
@@ -88,15 +89,45 @@ def main() -> None:
     # print(cap_port)
 
     ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
-    [best, t] = ga.run_evo(show_progress=True, croosover_point=.45, mutation_point=.15, generation_limit=1024, tam_population=50)
+    [best, t] = ga.run_evo(show_progress=True, croosover_point=.35, mutation_point=.3, generation_limit=10000, tam_population=128, fitness_limit=225619.17757861919)
     print(f'fitness: {best.get_fitness()} with time: {t}')
     graph = defaultdict(lambda: np.zeros(2))
+    send = defaultdict(float)
     for i in best.cromossomos:
         for u, val in i.adjlist.items():
             for v, val2 in val.items():
                 graph[u, v] += val2
+                send[u] += val2
     for key, value in graph.items():
-        print(key, value)
+        u, v = key
+        f = ''
+        if u in cap_port:
+            f = 'port'
+        elif u in cap_transbordo:
+            f = 'transhipment'
+        elif u in supply:
+            f = 'supply'
+        s = ''
+        if v in cap_port:
+            s = 'port'
+        elif v in cap_transbordo:
+            s = 'transhipment'
+        elif u in supply:
+            s = 'supply'
+        print(f'{f} {u} send {value[1]} to {s} {v}')
+    for key, value in send.items():
+        tot = 0
+        what = ''
+        if key in cap_port:
+            tot = cap_port[key].cap
+            what = 'port'
+        if key in cap_transbordo:
+            tot = cap_transbordo[key].cap
+            what = 'transhipment'
+        if key in supply:
+            tot = supply[key].cap
+            what = 'supply'
+        print(f'{what} {key} send: {value} from total of {tot}')
     
 
 if __name__ == "__main__":
