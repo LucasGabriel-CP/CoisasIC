@@ -22,6 +22,12 @@ class Point:
 
     def __isub__(self, other):
         return self.__sub__(other=other)
+    
+    def __add__(self, other):
+        return Point(self.x, self.y, self.cap + other)
+    
+    def __iadd__(self, other):
+        return self.__add__(other=other)
 
     def __str__(self) -> str:
         return 'x: ' + str(self.x) + '\ny: ' + str(self.y) + '\ncap: ' + str(self.cap)
