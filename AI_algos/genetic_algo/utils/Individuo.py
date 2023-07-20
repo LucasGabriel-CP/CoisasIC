@@ -14,34 +14,26 @@ class Cromossomo:
         self.gene_id = _id
         self.gene_point = _point
         self.type_conection = "none"
+        self.total_cost = 0
+        self.total_send = 0
         self.adjlist = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))
     
     def add_edge(self, u: int, v: int, weight: np.array) -> None:
+        self.total_cost += weight[0]
+        if u == self.gene_id:
+            self.total_send += weight[1]
         self.adjlist[u][v] += deepcopy(weight)
         # breakpoint()
 
-    def get_cost(self) -> float:
-        sum = 0
-        for _, i in self.adjlist.items():
-            for _, j in i.items():
-                sum += j[0]
-        return sum
-    
-    def get_total(self) -> float:
-        sum = 0
-        for _, i in self.adjlist[self.gene_id].items():
-            sum += i[1]
-        return sum
-
     def __str__(self) -> str:
-        return "id: " + str(self.gene_id) + '\nconection: ' + self.type_conection + '\nCost: ' + str(self.get_cost()) + '\n' + str(self.gene_point)
+        return "id: " + str(self.gene_id) + '\nconection: ' + self.type_conection + '\nCost: ' + str(self.total_cost) + '\n' + str(self.gene_point)
 
 class Individuo:
     def __init__(self, origens: Dict[int, Point], transbordos: Dict[int, Point], portos: Dict[int, Point], clientes: Dict[int, Point]) -> None:
         self.transbordos = deepcopy(transbordos)
         self.portos = deepcopy(portos)
         self.clientes = deepcopy(clientes)
-
+        self.rank = None
         self.n =list(origens.keys())
         self.m = list(portos.keys())
         self.k = list(transbordos.keys())
@@ -50,6 +42,10 @@ class Individuo:
         for i in range(len(self.n)):
             self.cromossomos.append(Cromossomo(i, origens[i]))
         shuffle(self.cromossomos)
+
+    # def reverse_cromo(self, id1: int, id2: int) -> None:
+    #     self.cromossomos = self.cromossomos[:id1] + self.cromossomos[id2:id1 - 1:-1] + self.cromossomos[id2 + 1:]
+    #     new_ind.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
 
     def give_random_stuff(self, cost_matrix) -> None:
         if random() < 0.05:
@@ -172,18 +168,20 @@ class Individuo:
     def get_fitness(self) -> float:
         sum = 0
         for cromo in self.cromossomos:
-            sum += cromo.get_cost()
+            sum += cromo.total_cost
         return sum
     
-    def update_info(self) -> bool:
+    def check_info(self) -> bool:
         for cromo in self.cromossomos:
+            if cromo.gene_point.cap < .0:
+                return False
             for key_1, value_1 in cromo.adjlist.items():
                 for key_2, value_2 in value_1.items():
                     if key_2 in self.portos:
-                        self.portos[key_2] -= value_2[1]
+                        if self.portos[key_2].cap < .0:
+                            return False
                     elif key_2 in self.transbordos:
-                        self.transbordos[key_2] -= value_2[1]
-                        if self.transbordos[key_2].cap >= .0:
+                        if self.transbordos[key_2].cap < .0:
                             return False
         return True
     def __str__(self) -> str:

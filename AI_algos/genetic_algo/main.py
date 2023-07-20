@@ -12,7 +12,7 @@ import time
 from utils import Point
 from GA import Evolution
 
-def closest_distances(cost_matrix, N, M, K):
+def closest_distances(cost_matrix, N, M, K) -> Dict[int, list]:
     dists = deepcopy(cost_matrix)
     paths = defaultdict(list())
     for i in N:
@@ -26,28 +26,7 @@ def closest_distances(cost_matrix, N, M, K):
                     paths[i] = [k, j]
     return paths
 
-
-def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: Dict[int, Point]):
-    ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
-    [best, t] = ga.run_evo(
-                        croosover_point=.25, mutation_point=.3,
-                        generation_limit=10000, tam_population=128,
-                        elitism_size=.05, fitness_limit=2388275.0263051689,
-                        show_progress=True
-                    )
-    score = best.get_fitness()
-    print(f'fitness: {best.get_fitness()} with time: {t}')
-    graph = defaultdict(lambda: np.zeros(2))
-    send = defaultdict(float)
-    for i in best.cromossomos:
-        for u, val in i.adjlist.items():
-            for v, val2 in val.items():
-                graph[u, v] += val2
-                send[u] += val2
-    return [graph, score]
-
-def main() -> None:
-    seed(int(time.time()))
+def read_stuff() -> list:
     #Read data
     #Read cost matrix
     df_ori_dest = pd.read_csv('D:/Bibliotecas/Documents/IC/Progs/dados/origem_porto.csv')
@@ -103,19 +82,17 @@ def main() -> None:
             cost_matrix[k][j] = df_trans_porto[str(j - M[0])][k - K[0]]
         for o in O:
             cost_matrix[j][o] = 0
+    
+    return [supply, demand, cap_transbordo, cap_port, cost_matrix]
 
-    # print(supply)
-    # print(cap_transbordo)
-    # print(cap_port)
-
+def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: Dict[int, Point], fitness_limit: float) -> list:
     ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
     [best, t] = ga.run_evo(
-                        croosover_point=.35, mutation_point=.3,
-                        generation_limit=10000, tam_population=128,
-                        elitism=0.05, fitness_limit=2388275.0263051689,
+                        generation_limit=300, tam_population=300,
+                        elitism=.04, fitness_limit=fitness_limit,
                         show_progress=True
                     )
-    print(f'fitness: {best.get_fitness()} with time: {t}')
+    score = best.get_fitness()
     graph = defaultdict(lambda: np.zeros(2))
     send = defaultdict(float)
     for i in best.cromossomos:
@@ -123,6 +100,25 @@ def main() -> None:
             for v, val2 in val.items():
                 graph[u, v] += val2
                 send[u] += val2
+    return [graph, score]
+
+
+def main() -> None:
+    seed(int(time.time()))
+    [supply, demand, cap_transbordo, cap_port, cost_matrix] = read_stuff()
+
+    media, best_score = 0, float('inf')
+    fl =  227402.66951299954
+    graph = defaultdict(lambda: np.zeros(2))
+    for _ in range(100):
+        [ga_graph, ga_score] = run_ga(cost_matrix, supply, cap_transbordo, cap_port, demand, fl)
+        if ga_score < best_score:
+            best_score = ga_score
+            graph = ga_graph
+        print(f'genetic algorithm fitness {ga_score} with {ga_score/fl:.4f}% gap')
+        media += ga_score
+    print(media)
+    send = defaultdict(float)
     for key, value in graph.items():
         u, v = key
         f = ''
@@ -139,6 +135,7 @@ def main() -> None:
             s = 'transhipment'
         elif u in supply:
             s = 'supply'
+        send[u] = value[1]
         print(f'{f} {u} send {value[1]} to {s} {v}')
     for key, value in send.items():
         tot = 0
