@@ -71,6 +71,8 @@ class Evolution:
                 Children.cromossomos[i].gene_id = aux[i].gene_id
                 Children.cromossomos[i].gene_point = self.origens[aux[i].gene_id]
             Children.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
+        if Children.get_fitness() > parent_1.get_fitness():
+            return parent_1
 
         return Children
 
@@ -96,7 +98,9 @@ class Evolution:
         new_ind = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
         for i in range(len(new_ind.cromossomos)):
             new_ind.cromossomos[i].gene_id = individuo.cromossomos[i].gene_id
-        new_ind.cromossomos = new_ind.cromossomos[:id1] + new_ind.cromossomos[id2:id1 - 1:-1] + new_ind.cromossomos[id2 + 1:]
+        middle_arr = new_ind.cromossomos[id1:id2]
+        shuffle(middle_arr)
+        new_ind.cromossomos = new_ind.cromossomos[:id1] + middle_arr + new_ind.cromossomos[id2:]
         new_ind.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
         if new_ind.get_fitness() <= individuo.get_fitness():
             return new_ind
@@ -138,7 +142,7 @@ class Evolution:
             if population[0].get_fitness() - best < 1e-6:
                 best = population[0].get_fitness()
                 nd = time.time()
-            if abs(best - fitness_limit) < 1e-6:
+            if best - fitness_limit < 1e-6 or time.time() - st > 1800:
                 break
 
             next_gen = deepcopy(population[:elitism_size])

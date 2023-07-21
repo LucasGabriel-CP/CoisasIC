@@ -88,7 +88,7 @@ def read_stuff() -> list:
 def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: Dict[int, Point], fitness_limit: float) -> list:
     ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
     [best, t] = ga.run_evo(
-                        generation_limit=300, tam_population=300,
+                        generation_limit=300, tam_population=100,
                         elitism=.04, fitness_limit=fitness_limit,
                         show_progress=True
                     )
@@ -108,16 +108,16 @@ def main() -> None:
     [supply, demand, cap_transbordo, cap_port, cost_matrix] = read_stuff()
 
     media, best_score = 0, float('inf')
-    fl =  227402.66951299954
+    fl =  1.2985459222448752e+06
     graph = defaultdict(lambda: np.zeros(2))
-    for _ in range(100):
+    for _ in range(20):
         [ga_graph, ga_score] = run_ga(cost_matrix, supply, cap_transbordo, cap_port, demand, fl)
         if ga_score < best_score:
             best_score = ga_score
             graph = ga_graph
         print(f'genetic algorithm fitness {ga_score} with {ga_score/fl:.4f}% gap')
         media += ga_score
-    print(media)
+    print(media/20)
     send = defaultdict(float)
     for key, value in graph.items():
         u, v = key

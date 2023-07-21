@@ -48,7 +48,7 @@ class Individuo:
     #     new_ind.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
 
     def give_random_stuff(self, cost_matrix) -> None:
-        if random() < 0.05:
+        if random() < 0.005:
             self.give_not_so_random_stuff(cost_matrix=cost_matrix)
             return
         pt, tb = 0, 0
