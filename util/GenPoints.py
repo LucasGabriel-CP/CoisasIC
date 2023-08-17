@@ -2,6 +2,7 @@ from math import sqrt, pow, gcd
 from random import SystemRandom
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 class Point:
     def __init__(self, x, y) -> None:
@@ -198,12 +199,13 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
 def distance(p1: Point, p2: Point):
     return sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
-def get_cost(points_orig, n, points_dest, m, tku):
+def get_cost(points_orig, n, points_dest, m, model):
     matrix = []
     for i in range(n):
         aux = []
         for j in range(m):
-            aux.append(distance(points_orig[i], points_dest[j]) * tku)
+            d = np.array([distance(points_orig[i], points_dest[j])])
+            aux.append(model.predict(d[:, np.newaxis])[0])
         matrix.append(aux)
 
     return matrix
