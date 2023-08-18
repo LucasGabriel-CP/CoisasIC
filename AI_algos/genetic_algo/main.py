@@ -83,23 +83,21 @@ def read_stuff() -> list:
         for o in O:
             cost_matrix[j][o] = 0
     
-    return [supply, demand, cap_transbordo, cap_port, cost_matrix]
+    return [supply, soma, cap_transbordo, cap_port, cost_matrix]
 
-def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: Dict[int, Point], fitness_limit: float) -> list:
-    ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, clientes=demand, cost_matrix=cost_matrix)
+def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: float, fitness_limit: float) -> list:
+    ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, demand=demand, cost_matrix=cost_matrix)
     [best, t] = ga.run_evo(
-                        generation_limit=300, tam_population=100,
-                        elitism=.04, fitness_limit=fitness_limit,
+                        generation_limit=10000, tam_population=344,
+                        elitism=.1, fitness_limit=fitness_limit,
                         show_progress=True
                     )
     score = best.get_fitness()
     graph = defaultdict(lambda: np.zeros(2))
-    send = defaultdict(float)
     for i in best.cromossomos:
         for u, val in i.adjlist.items():
             for v, val2 in val.items():
                 graph[u, v] += val2
-                send[u] += val2
     return [graph, score]
 
 
@@ -108,17 +106,28 @@ def main() -> None:
     [supply, demand, cap_transbordo, cap_port, cost_matrix] = read_stuff()
 
     media, best_score = 0, float('inf')
-    fl =  1.2985459222448752e+06
+    fl = 134521.02461764
     graph = defaultdict(lambda: np.zeros(2))
-    for _ in range(20):
-        [ga_graph, ga_score] = run_ga(cost_matrix, supply, cap_transbordo, cap_port, demand, fl)
+
+    all_scores = []
+    for _ in range(10):
+        [ga_graph, ga_score] = run_ga(cost_matrix=cost_matrix, supply=supply, cap_transbordo=cap_transbordo,
+                                    cap_port=cap_port,demand=demand, fitness_limit=fl)
         if ga_score < best_score:
             best_score = ga_score
             graph = ga_graph
-        print(f'genetic algorithm fitness {ga_score} with {ga_score/fl:.4f}% gap')
+        gap = (ga_score - fl) / ((ga_score + fl) / 2) * 100
+        print(f'genetic algorithm fitness {ga_score} with {gap:.4f}% gap')
+        all_scores.append(ga_score)
         media += ga_score
-    print(media/20)
+    print(media/10)
+    
+    df = pd.DataFrame()
+    df['scores'] = all_scores
+    df.to_excel('./result.xlsx', index=False)
+
     send = defaultdict(float)
+    file_ans = open('./graph.txt', 'w')
     for key, value in graph.items():
         u, v = key
         f = ''
@@ -135,8 +144,9 @@ def main() -> None:
             s = 'transhipment'
         elif u in supply:
             s = 'supply'
-        send[u] = value[1]
-        print(f'{f} {u} send {value[1]} to {s} {v}')
+        send[u] += value[1]
+        file_ans.write(f'{f} {u} send {value[1]} to {s} {v}\n')
+
     for key, value in send.items():
         tot = 0
         what = ''
@@ -149,8 +159,9 @@ def main() -> None:
         if key in supply:
             tot = supply[key].cap
             what = 'supply'
-        print(f'{what} {key} send: {value} from total of {tot}')
-    
+        file_ans.write(f'{what} {key} send: {value} from total of {tot}\n')
+    file_ans.close()
+
 
 if __name__ == "__main__":
     main()

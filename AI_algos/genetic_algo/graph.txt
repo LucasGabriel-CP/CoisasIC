@@ -1,0 +1,11 @@
+supply 2 send 459.0 to port 11
+supply 2 send 628.0 to port 12
+supply 2 send 106.0 to port 14
+supply 0 send 208.0 to port 14
+supply 1 send 1172.0 to port 14
+supply 4 send 628.0 to port 12
+supply 4 send 290.0 to port 11
+supply 2 send: 1193.0 from total of 1193
+supply 0 send: 208.0 from total of 208
+supply 1 send: 1172.0 from total of 1172
+supply 4 send: 918.0 from total of 3034

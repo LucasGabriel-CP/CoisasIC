@@ -16,17 +16,19 @@ class Evolution:
     def __init__(
         self,
         origens: Dict[int, Point], transbordos: Dict[int, Point],
-        portos: Dict[int, Point], clientes: Dict[int, Point],
-        cost_matrix: Dict[Tuple[int, int], float],
+        portos: Dict[int, Point], cost_matrix: Dict[Tuple[int, int], float],
+        demand: float  
     ) -> None:
         self.origens = deepcopy(origens)
         self.transbordos = deepcopy(transbordos)
         self.portos = deepcopy(portos)
-        self.clientes = deepcopy(clientes)
+        self.demand = demand
         self.cost_matrix = deepcopy(cost_matrix)
+        self.cross_cnt = 0
+        self.mut_cnt = 0
 
     def GenInd(self) -> Individuo:
-        new_ind = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
+        new_ind = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
         new_ind.give_random_stuff(cost_matrix=self.cost_matrix)
         return new_ind
 
@@ -47,63 +49,64 @@ class Evolution:
 
     def CrossOver(self, parent_1: Individuo, parent_2: Individuo) -> Individuo:
         child_routes = []
-
+        self.cross_cnt += 1
         has = {}
         for i, _ in self.origens.items():
             has[i] = False
         for cromo in parent_1.cromossomos[:(len(parent_1.cromossomos) + 1)//2]:
             child_routes.append(cromo)
-            has[cromo.gene_id] = False
+            has[cromo.gene_id] = True
         
-        Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
+        Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
         Children.cromossomos = deepcopy(child_routes)
-        
         for cromo in parent_2.cromossomos[::-1]:
             if not has[cromo.gene_id]:
                 Children.cromossomos.append(Cromossomo(cromo.gene_id, self.origens[cromo.gene_id]))
         
-        Children.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
+        Children.give_random_stuff(cost_matrix=self.cost_matrix)
 
         if not Children.check_info():
             aux = Children.cromossomos
-            Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
+            Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
             for i in range(len(Children.cromossomos)):
                 Children.cromossomos[i].gene_id = aux[i].gene_id
                 Children.cromossomos[i].gene_point = self.origens[aux[i].gene_id]
             Children.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
-        if Children.get_fitness() > parent_1.get_fitness():
-            return parent_1
-
+        # if Children.get_fitness() > parent_1.get_fitness():
+        #     return parent_1
+        # breakpoint()
         return Children
 
     def crossover_prob(slef, fmax: float, favg: float, fat: float):
-        k3 = 1.0
+        k3 = 0.5
         k1 = random.uniform(k3, 1.0 + 1e-7)
-        if fat < favg:
+        if fat <= favg:
             return k3
-        return k1 * (fmax - favg) / max(fmax - fat, 1)
+        return k1 * (favg - fmax) / max(fat - fmax, 1)
 
 
     def mutation_prob(self, fmax: float, favg: float, fat: float):
         k4 = 0.5
         k2 = random.uniform(k4, 1.0 + 1e-7)
-        if fat < favg:
+        if fat <= favg:
             return k4
-        return k2 * (fmax - favg) / max(fmax - fat, 1)
+        return k2 * (favg - fmax) / max(fat - fmax, 1)
 
     def Mutation(self, individuo: Individuo) -> Individuo:
         id1, id2 = randint(1, len(individuo.cromossomos) - 1), randint(1, len(individuo.cromossomos) - 1)
         if id1 > id2: id1, id2 = id2, id1
-        
-        new_ind = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, clientes=self.clientes)
+        self.mut_cnt += 1
+        new_ind = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
         for i in range(len(new_ind.cromossomos)):
             new_ind.cromossomos[i].gene_id = individuo.cromossomos[i].gene_id
+            new_ind.cromossomos[i].gene_point = self.origens[individuo.cromossomos[i].gene_id]
         middle_arr = new_ind.cromossomos[id1:id2]
         shuffle(middle_arr)
         new_ind.cromossomos = new_ind.cromossomos[:id1] + middle_arr + new_ind.cromossomos[id2:]
         new_ind.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
-        if new_ind.get_fitness() <= individuo.get_fitness():
-            return new_ind
+        assert(new_ind.check_info())
+        # if new_ind.get_fitness() <= individuo.get_fitness():
+        #     return new_ind
         return individuo
 
     def run_evo(
@@ -120,7 +123,9 @@ class Evolution:
         best = population[0].get_fitness()
         elitism_size = ceil(tam_population * elitism)
         stagnation = [[0, 0]] * tam_population
-        for gen in range(generation_limit):
+        gen = 0
+        print('\n')
+        while time.time() - st < 60:
             population = sorted(
                 population,
                 key=lambda x: x.get_fitness()
@@ -138,11 +143,13 @@ class Evolution:
             favg = favg/tam_population
             worst = population[-1].get_fitness()
             if show_progress:
-                print(f"Generation {gen}, Fitness: min={fmax:.4f}, mean={favg:.4f}, max={population[-1].get_fitness()}, Gap: {population[0].get_fitness()/fitness_limit:.4f}%")
+                gap = (population[0].get_fitness() - fitness_limit) / ((population[0].get_fitness() + fitness_limit) / 2) * 100
+                print(f"Generation {gen}, Fitness: min={fmax:.6f}, mean={favg:.6f}, max={population[-1].get_fitness():.6f}, Gap: {gap:.4f}%",
+                        end='\r', flush=True)
             if population[0].get_fitness() - best < 1e-6:
                 best = population[0].get_fitness()
                 nd = time.time()
-            if best - fitness_limit < 1e-6 or time.time() - st > 1800:
+            if best - fitness_limit < 1e-6:
                 break
 
             next_gen = deepcopy(population[:elitism_size])
@@ -158,7 +165,10 @@ class Evolution:
                         parents[0] = self.Mutation(parents[0])
                     next_gen.append(deepcopy(parents[0]))
             population = deepcopy(next_gen)
+            gen += 1
+
         if nd is None:
             nd = time.time()
+        print('\n')
         return [population[0], nd - st]
             
