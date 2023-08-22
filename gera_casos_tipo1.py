@@ -54,7 +54,7 @@ def main():
 
     demand = [SystemRandom().randint(100, 1000) for _ in range(clients)]
     sum_demand = sum(demand)
-    supply = [SystemRandom().randint(100, sum_demand) for _ in range(orig)]
+    supply = [SystemRandom().randint(100, 1000) for _ in range(orig)]
     cap_trans = [SystemRandom().randint(100, 1000) for _ in range(trans)]
     cap_porto = [SystemRandom().randint(100, 1000) for _ in range(port)]
 

@@ -30,6 +30,7 @@ class Evolution:
     def GenInd(self) -> Individuo:
         new_ind = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
         new_ind.give_random_stuff(cost_matrix=self.cost_matrix)
+        assert(new_ind.check_info())
         return new_ind
 
     def GenPop(self, tam: int) -> Populacao:
@@ -54,9 +55,8 @@ class Evolution:
         for i, _ in self.origens.items():
             has[i] = False
         for cromo in parent_1.cromossomos[:(len(parent_1.cromossomos) + 1)//2]:
-            child_routes.append(cromo)
+            child_routes.append(Cromossomo(cromo.gene_id, self.origens[cromo.gene_id]))
             has[cromo.gene_id] = True
-        
         Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
         Children.cromossomos = deepcopy(child_routes)
         for cromo in parent_2.cromossomos[::-1]:
@@ -65,16 +65,7 @@ class Evolution:
         
         Children.give_random_stuff(cost_matrix=self.cost_matrix)
 
-        if not Children.check_info():
-            aux = Children.cromossomos
-            Children = Individuo(origens=self.origens, transbordos=self.transbordos, portos=self.portos, demand=self.demand)
-            for i in range(len(Children.cromossomos)):
-                Children.cromossomos[i].gene_id = aux[i].gene_id
-                Children.cromossomos[i].gene_point = self.origens[aux[i].gene_id]
-            Children.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
-        # if Children.get_fitness() > parent_1.get_fitness():
-        #     return parent_1
-        # breakpoint()
+        assert(Children.check_info())
         return Children
 
     def crossover_prob(slef, fmax: float, favg: float, fat: float):
@@ -103,10 +94,8 @@ class Evolution:
         middle_arr = new_ind.cromossomos[id1:id2]
         shuffle(middle_arr)
         new_ind.cromossomos = new_ind.cromossomos[:id1] + middle_arr + new_ind.cromossomos[id2:]
-        new_ind.give_not_so_random_stuff(cost_matrix=self.cost_matrix)
+        new_ind.give_random_stuff(cost_matrix=self.cost_matrix)
         assert(new_ind.check_info())
-        # if new_ind.get_fitness() <= individuo.get_fitness():
-        #     return new_ind
         return individuo
 
     def run_evo(
@@ -125,7 +114,7 @@ class Evolution:
         stagnation = [[0, 0]] * tam_population
         gen = 0
         print('\n')
-        while time.time() - st < 60:
+        while time.time() - st < 3600:
             population = sorted(
                 population,
                 key=lambda x: x.get_fitness()
@@ -137,7 +126,6 @@ class Evolution:
             for i in range(tam_population):
                 if population[i].get_fitness() - population[0].get_fitness() < 1e-6:
                     cnt += 1
-                population[i].rank = i
                 fmax = min(fmax, population[i].get_fitness())
                 favg += population[i].get_fitness()
             favg = favg/tam_population

@@ -71,6 +71,7 @@ class Individuo:
                     cost_trans = cost_matrix[cromo.gene_id][id_trans]
                     cost_port = cost_matrix[id_trans][id_port]
                     qnt_to_transport = min(cromo.gene_point.cap, self.transbordos[id_trans].cap, self.portos[id_port].cap, self.demand - tot - new_cromo.total_send)
+                    assert qnt_to_transport <= self.portos[id_port].cap and qnt_to_transport <= self.transbordos[id_trans].cap
 
                     new_cromo.add_edge(cromo.gene_id, id_trans, np.array([cost_trans * qnt_to_transport, qnt_to_transport]))
                     new_cromo.add_edge(id_trans, id_port, np.array([cost_port * qnt_to_transport, qnt_to_transport]))
@@ -84,6 +85,7 @@ class Individuo:
                         id_port = choice(key_port)
                     cost = cost_matrix[cromo.gene_id][id_port]
                     qnt_to_transport = min(cromo.gene_point.cap, self.portos[id_port].cap, self.demand - tot - new_cromo.total_send)
+                    assert qnt_to_transport <= self.portos[id_port].cap
 
                     new_cromo.add_edge(cromo.gene_id, id_port, np.array([cost * qnt_to_transport, qnt_to_transport]))
                     new_cromo.gene_point -= qnt_to_transport
@@ -165,6 +167,7 @@ class Individuo:
                 if cap_k.cap > 0 and cap_j.cap > 0 and cost_matrix[point][k] + cost_matrix[k][j] < cost_trans + cost_port:
                     cost_trans = cost_matrix[point][k]
                     cost_port = cost_matrix[k][j]
+                    # breakpoint()
                     qnt_to_transport = min(qnt_to_transport, cap_k.cap, cap_j.cap, self.demand - tot)
                     id_trans = k
                     id_port = j

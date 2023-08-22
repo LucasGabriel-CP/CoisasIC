@@ -87,9 +87,10 @@ def read_stuff() -> list:
 
 def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Point], cap_port: Dict[int, Point], demand: float, fitness_limit: float) -> list:
     ga = Evolution(origens=supply, transbordos=cap_transbordo, portos=cap_port, demand=demand, cost_matrix=cost_matrix)
+    # breakpoint()
     [best, t] = ga.run_evo(
-                        generation_limit=10000, tam_population=344,
-                        elitism=.1, fitness_limit=fitness_limit,
+                        generation_limit=10000, tam_population=144,
+                        elitism=.05, fitness_limit=fitness_limit,
                         show_progress=True
                     )
     score = best.get_fitness()
@@ -102,14 +103,19 @@ def run_ga(cost_matrix, supply: Dict[int, Point], cap_transbordo: Dict[int, Poin
 
 
 def main() -> None:
-    seed(int(time.time()))
+    t = int( time.time() * 1000.0 )
+    seed( ((t & 0xff000000) >> 24) +
+             ((t & 0x00ff0000) >>  8) +
+             ((t & 0x0000ff00) <<  8) +
+             ((t & 0x000000ff) << 24)   )
     [supply, demand, cap_transbordo, cap_port, cost_matrix] = read_stuff()
 
     media, best_score = 0, float('inf')
-    fl = 134521.02461764
+    fl = 1050097.9903317615
     graph = defaultdict(lambda: np.zeros(2))
 
     all_scores = []
+    mean_gap = 0
     for _ in range(10):
         [ga_graph, ga_score] = run_ga(cost_matrix=cost_matrix, supply=supply, cap_transbordo=cap_transbordo,
                                     cap_port=cap_port,demand=demand, fitness_limit=fl)
@@ -117,10 +123,11 @@ def main() -> None:
             best_score = ga_score
             graph = ga_graph
         gap = (ga_score - fl) / ((ga_score + fl) / 2) * 100
+        mean_gap += gap
         print(f'genetic algorithm fitness {ga_score} with {gap:.4f}% gap')
         all_scores.append(ga_score)
         media += ga_score
-    print(media/10)
+    print(f'resultado medio: {media/10}\ngap medio: {mean_gap/10}')
     
     df = pd.DataFrame()
     df['scores'] = all_scores
