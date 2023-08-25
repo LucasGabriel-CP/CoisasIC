@@ -23,20 +23,24 @@ def create_model(df_path):
     model.fit(X=x[:, np.newaxis], y=y)
     return model
 
-def main():
-    orig = int(input("Quantidade origens: "))
-    trans = int(input("Quantidade transbordos: "))
-    port = int(input("Quantidade portos: "))
-    clients = int(input("Quantidade clientes: "))
+def create_instance(instance_id: int, orig: int, trans: int, port: int) -> None:
+    clients = trans
 
-    points_orig = GenPoints.get_point(lim_x_left=-100, lim_x_right=100,
-                            lim_y_down=-100, lim_y_up=100, n=orig)
+    points_orig = GenPoints.get_point(
+                            lim_x_left=-100, lim_x_right=100,
+                            lim_y_down=-100, lim_y_up=100, n=orig,
+                            forb_x_left=0, forb_x_right=0,
+                            forb_y_down=0, forb_y_up=0)
     
     points_transbordo = GenPoints.get_point(lim_x_left=-250, lim_x_right=250,
-                            lim_y_down=-250, lim_y_up=250, n=trans)
+                            lim_y_down=-250, lim_y_up=250, n=trans,
+                            forb_x_left=-100, forb_x_right=100,
+                            forb_y_down=-100, forb_y_up=100)
     
     points_porto = GenPoints.get_point(lim_x_left=-1000, lim_x_right=1000,
-                            lim_y_down=-1000, lim_y_up=1000, n=port)
+                            lim_y_down=-1000, lim_y_up=1000, n=port,
+                            forb_x_left=-250, forb_x_right=250,
+                            forb_y_down=-250, forb_y_up=250)
     
 
     model_rodo = create_model('./dados/Frete Rodoviário.xlsx')
@@ -80,7 +84,3 @@ def main():
     pd.DataFrame(aux).to_csv("./dados/cap_porto.csv", index=None)
     
     pd.DataFrame(demand).to_csv("./dados/demand.csv", index=None)
-
-
-if __name__ == "__main__":
-    main()
