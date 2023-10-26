@@ -1,0 +1,7 @@
+supply 20 send 356.0 to port 260
+supply 20 send 233.0 to port 269
+supply 20 send 826.0 to port 201
+supply 20 send 32706.0 to port 268
+supply 39 send 5001.0 to port 268
+supply 20 send: 34121.0 from total of 34121
+supply 39 send: 5001.0 from total of 31733

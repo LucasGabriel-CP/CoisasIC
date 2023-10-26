@@ -2,6 +2,7 @@ from math import sqrt, pow, gcd
 from random import SystemRandom
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 class Point:
     def __init__(self, x, y) -> None:
@@ -9,7 +10,7 @@ class Point:
         self.y = y
         
     def __str__(self) -> str:
-        return "x: " + str(self.x) + "    y: " + str(self.y) 
+        return "x: " + str(self.x) + "    y: " + str(self.y)
 
 class line:
     def __init__(self, p1, p2) -> None:
@@ -76,7 +77,7 @@ def checkInside(poly, n, p):
     """
 
     #Ned to check if it's really a polygon
-    if n < 3:
+    if n < 3 or poly[0] == 0:
         return False
 
     exline = line(p, Point(9999, p.y))
@@ -144,7 +145,8 @@ def get_pick(points) -> int:
     """
     return pol_area(points=points) + 1 - bounds(points=points) // 2
 
-def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int, n: int):
+def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
+              forb_x_left: int, forb_x_right: int, forb_y_down: int, forb_y_up, n: int):
     """
     description:
         Genarete random points inside a rectangle
@@ -155,11 +157,13 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
     param n: leftmost x point
     return: points generated
     """
+    excluded = [Point(forb_x_left, forb_y_down), Point(forb_x_right, forb_y_down),
+                Point(forb_x_left, forb_y_up), Point(forb_x_right, forb_y_up)]
     points = []
     for _ in range(4):
         x = SystemRandom().randint(lim_x_left, lim_x_right)
         y = SystemRandom().randint(lim_y_down, lim_y_up)
-        while Point(x, y) in points:
+        while Point(x, y) in points or checkInside(excluded, 4, Point(x, y)):
             x = SystemRandom().randint(lim_x_left, lim_x_right)
             y = SystemRandom().randint(lim_y_down, lim_y_up)
         points.append(Point(x, y))
@@ -169,7 +173,7 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
         for _ in range(4):
             x = SystemRandom().randint(lim_x_left, lim_x_right)
             y = SystemRandom().randint(lim_y_down, lim_y_up)
-            while Point(x, y) in points:
+            while Point(x, y) in points or checkInside(excluded, 4, p):
                 x = SystemRandom().randint(lim_x_left, lim_x_right)
                 y = SystemRandom().randint(lim_y_down, lim_y_up)
             points.append(Point(x, y))
@@ -187,7 +191,7 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
         x = SystemRandom().randint(left_most, right_most)
         y = SystemRandom().randint(lowest, highest)
         p = Point(x, y)
-        while not checkInside(points, 4, p) or p in ans:
+        while not checkInside(points, 4, p) or p in ans or checkInside(excluded, 4, p):
             x = SystemRandom().randint(left_most, right_most)
             y = SystemRandom().randint(lowest, highest)
             p = Point(x, y)
@@ -198,12 +202,13 @@ def get_point(lim_x_left: int, lim_x_right: int, lim_y_down: int, lim_y_up: int,
 def distance(p1: Point, p2: Point):
     return sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
-def get_cost(points_orig, n, points_dest, m, tku):
+def get_cost(points_orig, n, points_dest, m, model):
     matrix = []
     for i in range(n):
         aux = []
         for j in range(m):
-            aux.append(distance(points_orig[i], points_dest[j]) * tku)
+            d = np.array([distance(points_orig[i], points_dest[j])])
+            aux.append(model.predict(d[:, np.newaxis])[0])
         matrix.append(aux)
 
     return matrix

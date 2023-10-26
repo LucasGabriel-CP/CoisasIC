@@ -1,0 +1,4 @@
+resultado medio: 1230068.7568
+gap medio: 6.69
+melhor resultado: 1216645.1776
+gap min: 5.5933
